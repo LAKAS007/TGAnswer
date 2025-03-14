@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main form</title>
+</head>
+<body>
+<form th:method="GET" th:action="@{/TGAnswer/request}">
+    <label for="username">Enter username</label>
+    <input type="text" id="username" name="username" class="username" />
+
+    <br />
+    <br />
+
+    <input type="submit" value="Request" class="button">
+</form>
+</body>
+</html>
