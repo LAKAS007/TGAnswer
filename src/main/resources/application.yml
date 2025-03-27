@@ -4,3 +4,9 @@ neural_network:
 spring:
   thymeleaf:
     cache: false
+
+tg:
+  url: https://web.telegram.org/k/#
+
+server:
+  port: 8082
