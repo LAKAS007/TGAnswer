@@ -28,11 +28,13 @@ public class TgSelenium {
 
     private void waitForAuthorization() {
         By findParameter = By.className("input-message-input");
+        By findParameter1 = By.xpath("//div[contains(@class, 'input-message-input') and @data-peer-id]");
+
 
         log.info("Waiting for authorization...");
         while (enterLine == null) {
             try {
-                enterLine = driver.findElement(findParameter);
+                enterLine = driver.findElement(findParameter1);
             } catch (NoSuchElementException e) {}
         }
     }
