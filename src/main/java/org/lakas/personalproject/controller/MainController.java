@@ -1,4 +1,4 @@
-package org.lakas.personalproject.controllers;
+package org.lakas.personalproject.controller;
 
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.service.OpenAiService;
