@@ -3,28 +3,25 @@ package org.lakas.personalproject.neural.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.model.Message;
 import org.lakas.personalproject.model.MessageContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
-import retrofit2.http.Body;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
-@Service
-public class ByteDanceNeuralService implements NeuralService {
+public class GeneralNeuralService implements NeuralService {
+    private final String URL = "https://openrouter.ai/api/v1/chat/completions";
+
+    private final NeuralModel neuralModel;
+
     private final RestClient restClient;
 
     private final String authToken;
 
-    @Autowired
-    public ByteDanceNeuralService(RestClient restClient, @Value("${neural.api.key}") String authToken) {
+    public GeneralNeuralService(NeuralModel neuralModel, RestClient restClient, String authToken) {
+        this.neuralModel = neuralModel;
         this.restClient = restClient;
         this.authToken = authToken;
     }
@@ -39,16 +36,27 @@ public class ByteDanceNeuralService implements NeuralService {
         return getAnswer(responseText);
     }
 
+    @Override
+    public boolean isAvailable() {
+        ResponseEntity<Void> responseEntity = restClient.options()
+                .uri(URL)
+                .header("Authorization", "Bearer " + authToken)
+                .retrieve()
+                .toBodilessEntity();
+
+        return responseEntity.getStatusCode().is2xxSuccessful();
+    }
+
     private String sendRequest(String requestMessage) {
         Map<String, Object> requestBody = Map.of(
-                "model", "bytedance-research/ui-tars-72b:free",
+                "model", neuralModel.getName(),
                 "messages", new Object[]{
                         Map.of("role", "user", "content", requestMessage)
                 }
         );
 
         return restClient.post()
-                .uri("https://openrouter.ai/api/v1/chat/completions")
+                .uri(URL)
                 .header("Authorization", "Bearer " + authToken)
                 .body(requestBody)
                 .retrieve()
@@ -65,5 +73,10 @@ public class ByteDanceNeuralService implements NeuralService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public NeuralModel getNeuralModel() {
+        return neuralModel;
     }
 }
