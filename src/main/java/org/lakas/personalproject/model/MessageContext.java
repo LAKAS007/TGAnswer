@@ -16,10 +16,10 @@ public class MessageContext {
     public enum Gender {
         MALE,FEMALE
     }
-    private final List<Message> list;
+    private final List<Message> messages;
     private final Gender gender;
 
     public void clearMessages() {
-        list.clear();
+        messages.clear();
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -36,15 +38,19 @@ public class SeleniumCore {
     public void start(String login) {
         driver.get(TG_URL + login);
         log.info("Started Selenium Core");
+
         log.info("Waiting for authorization");
         authorizationSelenium.waitForAuthorization();
+
         log.info("Authorization successful. Reading messages from {}", login);
-        MessageContext msgCtx = new MessageContext(
-                List.of(new Message("Ты - мой помощник, когда я не могу отвечать. Ты отвечаешь за меня в социальной сети. Используй только русские буквы. Не используй смайлики. Только буквы/цифры/знаки препинания. Собеседник спросил как у меня дела.",
-                        Message.MessageAuthor.CLIENT)), MessageContext.Gender.MALE);
+        List<Message> messages = tgSelenium.readMessages();
+
+        MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
+
         log.info("Waiting neural network to response...");
         String msg = messageService.getMessage(msgCtx);
         log.info("Got message from neural network: {}", msg);
+
         tgSelenium.writeMessage(msg);
         log.info("Sent generated message to {}", login);
     }

@@ -1,5 +1,6 @@
 package org.lakas.personalproject.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.neural.service.NeuralModel;
 import org.lakas.personalproject.neural.service.NeuralService;
 import org.lakas.personalproject.neural.service.NeuralServiceFactory;
@@ -11,21 +12,23 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.Arrays;
 
+@Slf4j
 @Configuration
 public class NeuralNetworkConfig {
-    private final String modelName;
+    @Value("${neural.model}")
+    private String modelName;
 
     private final NeuralServiceFactory neuralServiceFactory;
 
     @Autowired
-    public NeuralNetworkConfig(@Value("${neural.model}") String modelName, NeuralServiceFactory neuralServiceFactory) {
-        this.modelName = modelName;
+    public NeuralNetworkConfig(NeuralServiceFactory neuralServiceFactory) {
         this.neuralServiceFactory = neuralServiceFactory;
     }
 
     @Bean
     @Primary
     public NeuralService neuralService() {
+        System.out.println("Model name: " + modelName);
         return neuralServiceFactory.getNeuralService(Arrays.stream(NeuralModel.values())
                 .filter(x -> x.getName().equals(modelName))
                 .findFirst()

@@ -3,14 +3,17 @@ package org.lakas.personalproject.neural.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.model.Message;
+import org.lakas.personalproject.model.Message.MessageAuthor;
 import org.lakas.personalproject.model.MessageContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class GeneralNeuralService implements NeuralService {
     private final String URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -28,11 +31,17 @@ public class GeneralNeuralService implements NeuralService {
 
     @Override
     public String generateMessage(MessageContext messageContext) {
-        String msg = messageContext.getList().stream()
-                .map(Message::getText)
-                .collect(Collectors.joining(" "));
+        String preform = "Ты - мой помощник, когда меня я не могу отвечать. " +
+                "Ты отвечаешь за меня людям в социальной сети. Общайся ТОЛЬКО на русском языке. " +
+                "Можно использовать ТОЛЬКО буквы/цифры/знаки препинания. ЗАПРЕЩЕНО использовать смайлики/картинки. " +
+                "Я тебе даю КОНТЕКСТ разговора: мои сообщения и сообщения собеседника. " +
+                "ОБЯЗАТЕЛЬНО учитывай время сообщений. " +
+                "Учитывая контекст, ты ДОЛЖЕН ответить собеседнику. В представленном контексте, для облегчения твоего восприятия, мои сообщения идут после префикса [Я], а сообщения собеседника идут после [Собеседник]. " +
+                "Тебе НЕЛЬЗЯ ставить префикс [Я] в ответе. Ответь как бы ответил нормальный, позитивный человек, общающийся в социальной сети. Вот контекст:\n";
 
-        String responseText = sendRequest(msg);
+        String msg = extractMessageFromContext(messageContext);
+
+        String responseText = sendRequest(preform + msg);
         return getAnswer(responseText);
     }
 
@@ -48,6 +57,7 @@ public class GeneralNeuralService implements NeuralService {
     }
 
     private String sendRequest(String requestMessage) {
+        log.debug("Request message: {}", requestMessage);
         Map<String, Object> requestBody = Map.of(
                 "model", neuralModel.getName(),
                 "messages", new Object[]{
@@ -61,6 +71,23 @@ public class GeneralNeuralService implements NeuralService {
                 .body(requestBody)
                 .retrieve()
                 .body(String.class);
+    }
+
+    private String extractMessageFromContext(MessageContext messageCtx) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        List<Message> messages = messageCtx.getMessages();
+
+        for (Message message : messages) {
+            String text = message.getText();
+            MessageAuthor messageAuthor = message.getMessageAuthor();
+
+            String prefix = "[" + message.getSentAt().toString() + "] ";
+            prefix += messageAuthor.equals(MessageAuthor.CLIENT) ? "[Я]: " : "[Собеседник]: ";
+            stringBuilder.append(prefix).append(text).append("\n");
+        }
+
+        return stringBuilder.toString();
     }
 
     private String getAnswer(String responseText) {

@@ -16,7 +16,7 @@ public class NeuralServiceFactory {
 
     public NeuralService getNeuralService(NeuralModel model) {
         return switch (model) {
-            case BYTE_DANCE72B, DEEP_SEEK_V3 -> new GeneralNeuralService(model, restClient, authToken);
+            case BYTE_DANCE72B, DEEP_SEEK_V3, QWEN_72B -> new GeneralNeuralService(model, restClient, authToken);
         };
     }
 }
