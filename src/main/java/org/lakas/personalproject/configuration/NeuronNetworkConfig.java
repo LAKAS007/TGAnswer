@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class NeuronNetworkConfig {
-    @Value("${neural_network.api_key}")
+    @Value("${neural.api.key}")
     private String apiKey;
 
     @Bean
