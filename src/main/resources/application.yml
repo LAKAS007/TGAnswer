@@ -1,8 +1,10 @@
 neural:
   api:
-    key: 
+    key:
 
 spring:
+  config:
+    import: application-private.yml
   thymeleaf:
     cache: false
 

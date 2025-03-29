@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @Builder
 public class MessageContext {
-    enum Gender {
+    public enum Gender {
         MALE,FEMALE
     }
     private final List<Message> list;
