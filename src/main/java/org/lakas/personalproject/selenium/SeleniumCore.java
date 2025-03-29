@@ -42,14 +42,14 @@ public class SeleniumCore {
         log.info("Authorization successful. Reading messages from {}", login);
         List<String> messages = tgSelenium.readMessages();
 
-        Message msg = Message.builder()
-                .text("hello")
-                .messageAuthor(CLIENT)
-                .build();
+//        Message msg = Message.builder()
+//                .text("hello")
+//                .messageAuthor(CLIENT)
+//                .build();
 
-        Message msg = new Message("hello", CLIENT);
+//        Message msg = new Message("hello", CLIENT);
 
-        String msg = neuralService.generateMessage(messageCtx);
+        String msg = neuralService.generateMessage(null);
         tgSelenium.writeMessage(msg);
     }
 }
