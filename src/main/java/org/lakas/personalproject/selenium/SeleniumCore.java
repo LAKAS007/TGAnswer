@@ -8,11 +8,13 @@ import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Component
@@ -43,7 +45,20 @@ public class SeleniumCore {
         authorizationSelenium.waitForAuthorization();
 
         log.info("Authorization successful. Reading messages from {}", login);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         List<Message> messages = tgSelenium.readMessages();
+        log.info("Read {} messages", messages.size());
+
+        if (messages.isEmpty()) {
+            log.info("No messages found. No work required");
+            return;
+        }
 
         MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
 

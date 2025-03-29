@@ -24,6 +24,27 @@ public class NeuralMessageProducerService implements MessageProducerService {
         }
 
         log.info("Neural Service model {} is available", neuralService.getNeuralModel());
-        return neuralService.generateMessage(messageContext);
+        String neuralNetworkResponse = tryToGenerateMessage(messageContext, 0);
+
+        if (neuralNetworkResponse == null) {
+            throw new NeuralServiceIsNotAvailableException();
+        }
+
+        neuralNetworkResponse = neuralNetworkResponse.replace("\\n", "");
+        return neuralNetworkResponse;
+    }
+
+    private String tryToGenerateMessage(MessageContext messageContext, int attempt) {
+        if (attempt == 3) {
+            return null;
+        }
+
+        try {
+            return neuralService.generateMessage(messageContext);
+        } catch (Exception ex) {
+            log.info("Couldn't get message from neural network ({}), attempt №{}", ex.getClass().getSimpleName(), (attempt + 1));
+            log.error(ex.getMessage(), ex);
+            return tryToGenerateMessage(messageContext, attempt + 1);
+        }
     }
 }

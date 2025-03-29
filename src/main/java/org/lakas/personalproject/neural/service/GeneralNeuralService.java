@@ -42,6 +42,7 @@ public class GeneralNeuralService implements NeuralService {
         String msg = extractMessageFromContext(messageContext);
 
         String responseText = sendRequest(preform + msg);
+        log.debug("Response text: {}", responseText);
         return getAnswer(responseText);
     }
 

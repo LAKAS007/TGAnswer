@@ -1,5 +1,5 @@
 neural:
-  model: google/gemini-2.5-pro-exp-03-25:free
+  model: qwen/qwen2.5-vl-72b-instruct:free
   api:
     key:
 
@@ -12,13 +12,13 @@ spring:
 tg:
   url: https://web.telegram.org/k/#
 
-#logging:
-#  level:
-#    org:
-#      lakas:
-#        personalproject:
-#          neural:
-#            debug
+logging:
+  level:
+    org:
+      lakas:
+        personalproject:
+          neural:
+            debug
 
 server:
   port: 8082
