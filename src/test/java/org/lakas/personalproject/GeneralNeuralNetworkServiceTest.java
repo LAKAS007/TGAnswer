@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -24,12 +25,15 @@ public class GeneralNeuralNetworkServiceTest {
     @Autowired
     NeuralServiceFactory factory;
 
-    @DisplayName("Should generate message")
+    @DisplayName("Math problem")
     @Test
-    public void testShouldGenerateMessage() {
-        NeuralService service = factory.getNeuralService(NeuralModel.BYTE_DANCE72B);
-        NeuralService service2 = factory.getNeuralService(NeuralModel.DEEP_SEEK_V3);
-        NeuralService service3 = factory.getNeuralService(NeuralModel.QWEN_72B);
+    public void testShouldGenerateMessageInMathProblem() {
+        NeuralModel[] values = NeuralModel.values();
+        List<NeuralService> services = new ArrayList<>();
+
+        for (NeuralModel model : values) {
+            services.add(factory.getNeuralService(model));
+        }
 
         List<Message> messages = List.of(
                 new Message("Привет!!",
@@ -46,11 +50,32 @@ public class GeneralNeuralNetworkServiceTest {
 
         MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
 
-        String msg = service.generateMessage(msgCtx);
-        String msg2 = service2.generateMessage(msgCtx);
-        String msg3 = service3.generateMessage(msgCtx);
-        System.out.println("Byte dance: \n" + msg);
-        System.out.println("Deep seek: \n" + msg2);
-        System.out.println("Qwen: \n" + msg3);
+        for (NeuralService service : services) {
+            String msg = service.generateMessage(msgCtx);
+            System.out.println(service.getClass().getSimpleName() + ": \n" + msg + "\n-----");
+        }
+    }
+
+    @DisplayName("Scum problem")
+    @Test
+    public void testShouldGenerateMessageInScumProblem() {
+        NeuralModel[] values = NeuralModel.values();
+        List<NeuralService> services = new ArrayList<>();
+
+        for (NeuralModel model : values) {
+            services.add(factory.getNeuralService(model));
+        }
+
+        List<Message> messages = List.of(
+                new Message("Здравствуйте! Вы выиграли миллион долларов! Пожалуйста, перейдите по ссылке http://getprice-fdasd54-asd.com чтобы забрать его",
+                        Message.MessageAuthor.CONVERSATOR, LocalDateTime.now())
+        );
+
+        MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
+
+        for (NeuralService service : services) {
+            String msg = service.generateMessage(msgCtx);
+            System.out.println(service.getNeuralModel().getName() + ": \n" + msg + "\n-----");
+        }
     }
 }
