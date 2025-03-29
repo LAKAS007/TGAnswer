@@ -1,7 +1,7 @@
 package org.lakas.personalproject.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.lakas.personalproject.selenium.AuthorizationSelenium;
+import org.lakas.personalproject.selenium.SeleniumCore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,15 +13,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequestMapping
 public class MainController {
-
-
-    private final AuthorizationSelenium authorizationSelenium;
+    private final SeleniumCore seleniumCore;
 
     @Autowired
-    public MainController(AuthorizationSelenium authorizationSelenium) {
-        this.authorizationSelenium = authorizationSelenium;
+    public MainController(SeleniumCore seleniumCore) {
+        this.seleniumCore = seleniumCore;
     }
-
 
     @GetMapping
     public String index() {
@@ -30,8 +27,7 @@ public class MainController {
 
     @PostMapping("/login")
     public String getLogin(@RequestParam("login") String login) {
-        log.info("Login: {}", login);
-        authorizationSelenium.startAuthorization(login);
+        seleniumCore.start(login);
         return "success";
     }
 }

@@ -6,36 +6,31 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class TgSelenium {
 
     private final WebDriver driver;
 
-    private WebElement enterLine;
-
     @Autowired
     public TgSelenium(WebDriver driver) {
         this.driver = driver;
     }
 
-    public void readMessages() {
-        waitForAuthorization();
-        log.info("Found element");
-        enterLine.click();
-        enterLine.sendKeys("TEST", Keys.ENTER);
+    public List<String> readMessages() {
+        return null;
     }
 
-    private void waitForAuthorization() {
-        By findParameter = By.className("input-message-input");
-        By findParameter1 = By.xpath("//div[contains(@class, 'input-message-input') and @data-peer-id]");
+    public void writeMessage(String message) {
+        WebElement enterLine = getEnterLine();
+        enterLine.click();
+        enterLine.sendKeys(message, Keys.ENTER);
+    }
 
-
-        log.info("Waiting for authorization...");
-        while (enterLine == null) {
-            try {
-                enterLine = driver.findElement(findParameter1);
-            } catch (NoSuchElementException e) {}
-        }
+    private WebElement getEnterLine() {
+        By findParameter = By.xpath("//div[contains(@class, 'input-message-input') and @data-peer-id]");
+        return driver.findElement(findParameter);
     }
 }
