@@ -1,6 +1,7 @@
 package org.lakas.personalproject.selenium;
 
 import lombok.extern.slf4j.Slf4j;
+import org.lakas.personalproject.model.Message;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class TgSelenium {
         this.driver = driver;
     }
 
-    public List<String> readMessages() {
+    public List<Message> readMessages() {
         return null;
     }
 

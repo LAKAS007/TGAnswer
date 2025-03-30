@@ -13,13 +13,13 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @Builder
 public class MessageContext {
-    enum Gender {
+    public enum Gender {
         MALE,FEMALE
     }
-    private final List<Message> list;
+    private final List<Message> messages;
     private final Gender gender;
 
     public void clearMessages() {
-        list.clear();
+        messages.clear();
     }
 }

@@ -2,17 +2,17 @@ package org.lakas.personalproject.selenium;
 
 import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.model.Message;
-import org.lakas.personalproject.model.Message.MessageAuthor;
-import org.lakas.personalproject.neural.service.NeuralService;
+import org.lakas.personalproject.model.MessageContext;
+import org.lakas.personalproject.service.MessageProducerService;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-
-import static org.lakas.personalproject.model.Message.MessageAuthor.CLIENT;
 
 @Slf4j
 @Component
@@ -21,35 +21,37 @@ public class SeleniumCore {
     private final AuthorizationSelenium authorizationSelenium;
     private final TgSelenium tgSelenium;
     private final WebDriver driver;
-    private final NeuralService neuralService;
+    private final MessageProducerService messageService;
 
     @Autowired
-    public SeleniumCore(@Value("${tg.url}") String tgUrl, AuthorizationSelenium authorizationSelenium, TgSelenium tgSelenium, WebDriver driver,
-                        NeuralService neuralService) {
+    public SeleniumCore(@Value("${tg.url}") String tgUrl, AuthorizationSelenium authorizationSelenium,
+                        TgSelenium tgSelenium, WebDriver driver,
+                        MessageProducerService messageService) {
         TG_URL = tgUrl;
         this.authorizationSelenium = authorizationSelenium;
         this.tgSelenium = tgSelenium;
         this.driver = driver;
-        this.neuralService = neuralService;
+        this.messageService = messageService;
     }
 
     @Async
     public void start(String login) {
         driver.get(TG_URL + login);
         log.info("Started Selenium Core");
+
         log.info("Waiting for authorization");
         authorizationSelenium.waitForAuthorization();
+
         log.info("Authorization successful. Reading messages from {}", login);
-        List<String> messages = tgSelenium.readMessages();
+        List<Message> messages = tgSelenium.readMessages();
 
-//        Message msg = Message.builder()
-//                .text("hello")
-//                .messageAuthor(CLIENT)
-//                .build();
+        MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
 
-//        Message msg = new Message("hello", CLIENT);
+        log.info("Waiting neural network to response...");
+        String msg = messageService.getMessage(msgCtx);
+        log.info("Got message from neural network: {}", msg);
 
-        String msg = neuralService.generateMessage(null);
         tgSelenium.writeMessage(msg);
+        log.info("Sent generated message to {}", login);
     }
 }
