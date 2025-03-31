@@ -13,6 +13,8 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @Builder
 public class MessageContext {
+    public static final MessageContext EMPTY = new MessageContext(new ArrayList<>(), Gender.MALE);
+
     public enum Gender {
         MALE,FEMALE
     }
@@ -21,5 +23,9 @@ public class MessageContext {
 
     public void clearMessages() {
         messages.clear();
+    }
+
+    public boolean isEmpty() {
+        return messages != null &&  messages.isEmpty();
     }
 }

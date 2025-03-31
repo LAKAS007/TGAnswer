@@ -11,53 +11,27 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class TgSelenium {
 
     private final WebDriver driver;
+    private final MessageExtractorSelenium messageExtractor;
 
     @Autowired
-    public TgSelenium(WebDriver driver) {
+    public TgSelenium(WebDriver driver, MessageExtractorSelenium messageExtractor) {
         this.driver = driver;
+        this.messageExtractor = messageExtractor;
     }
 
     public List<Message> readMessages() {
-        By findParameter = By.xpath("//div[contains(@class, 'bubble') and @data-mid]");
-        List<WebElement> messageElements = driver.findElements(findParameter);
-        List<Message> messages = new ArrayList<>();
-
-        for (WebElement element : messageElements) {
-            Message msg = convertToMessage(element);
-            if (msg != null) {
-                messages.add(msg);
-            }
-        }
-
-        return messages;
+        return messageExtractor.extractMessages(24);
     }
 
-    private Message convertToMessage(WebElement messageElement) {
-        String[] split = messageElement.getText().replace("\uE901", "").replaceAll("\n+", "\n").trim().split("\n");
-        String text = split[0];
-
-        if (text.isBlank()) {
-            return null;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm:ss");
-        LocalDateTime sentAt;
-
-        try {
-            sentAt = LocalDateTime.parse(messageElement.findElement(By.className("time-inner")).getDomAttribute("title"), formatter);
-        } catch (DateTimeParseException ex) {
-            return null;
-        }
-
-        String classname = messageElement.getDomAttribute("class");
-        Message.MessageAuthor msgAuthor = (classname.contains("is-out") ? Message.MessageAuthor.CLIENT : Message.MessageAuthor.CONVERSATOR);
-        return new Message(text, msgAuthor, sentAt);
+    public Optional<Message> readLastMessage() {
+        return messageExtractor.extractLastMessage();
     }
 
     public void writeMessage(String message) {

@@ -30,7 +30,7 @@ public class NeuralMessageProducerService implements MessageProducerService {
             throw new NeuralServiceIsNotAvailableException();
         }
 
-        neuralNetworkResponse = neuralNetworkResponse.replace("\\n", "");
+        neuralNetworkResponse = neuralNetworkResponse.replace("\n", "");
         return neuralNetworkResponse;
     }
 
