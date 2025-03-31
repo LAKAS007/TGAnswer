@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -88,8 +89,14 @@ public class MessageExtractorSelenium {
         if (text.isBlank()) {
             return null;
         }
+        LocalDateTime sentAt;
 
-        LocalDateTime sentAt = extractSendingDateTimeFromMessage(messageElement);
+        try {
+            sentAt = extractSendingDateTimeFromMessage(messageElement);
+        } catch (DateTimeParseException ex) {
+            log.error("Invalid datetime format", ex);
+            return null;
+        }
 
         return new Message(text, msgAuthor, sentAt);
     }
