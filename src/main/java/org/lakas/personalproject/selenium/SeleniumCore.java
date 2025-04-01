@@ -1,10 +1,13 @@
 package org.lakas.personalproject.selenium;
 
 import lombok.extern.slf4j.Slf4j;
+import org.lakas.personalproject.exception.NeuralServiceIsNotAvailableException;
 import org.lakas.personalproject.model.Message;
 import org.lakas.personalproject.model.MessageContext;
 import org.lakas.personalproject.service.MessageProducerService;
+import org.lakas.personalproject.service.SeleniumLoggerService;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -26,17 +29,19 @@ public class SeleniumCore {
     private final TgSelenium tgSelenium;
     private final WebDriver driver;
     private final MessageProducerService messageService;
+    private final SeleniumLoggerService loggerService;
     private final int MILLIS_SLEEP_TIME = 1000;
 
     @Autowired
     public SeleniumCore(@Value("${tg.url}") String tgUrl, AuthorizationSelenium authorizationSelenium,
                         TgSelenium tgSelenium, WebDriver driver,
-                        MessageProducerService messageService) {
+                        MessageProducerService messageService, SeleniumLoggerService loggerService) {
         TG_URL = tgUrl;
         this.authorizationSelenium = authorizationSelenium;
         this.tgSelenium = tgSelenium;
         this.driver = driver;
         this.messageService = messageService;
+        this.loggerService = loggerService;
     }
 
     @Async
@@ -46,6 +51,7 @@ public class SeleniumCore {
             Optional<Message> lastMsg = getLastMessageFromMsgCtx(lastMsgCtx);
             waitUntilNewMessages(lastMsg);
             log.info("New messages received");
+            loggerService.writeLog("New message(-s) were received");
         }
     }
 
@@ -65,6 +71,10 @@ public class SeleniumCore {
 
         Message lastMsg = optionalLastMsg.get();
 
+        log.info("Waiting for new messages");
+        loggerService.writeLog("Waiting for new message(-s)");
+
+
         while (lastMsg.equals(oldLastMsg)) {
             sleep(MILLIS_SLEEP_TIME);
             optionalLastMsg = getLastMessage();
@@ -75,16 +85,15 @@ public class SeleniumCore {
             }
 
             lastMsg = optionalLastMsg.get();
-            log.debug("Waiting for new messages");
         }
-
-        log.info("Found new messages");
     }
 
     private void waitUntilAnyMessages() {
+        log.info("Waiting for any messages");
+        loggerService.writeLog("Waiting for any messages");
+
         while (getLastMessage().isEmpty()) {
             sleep(MILLIS_SLEEP_TIME);
-            log.debug("Waiting for any messages");
         }
     }
 
@@ -95,10 +104,13 @@ public class SeleniumCore {
                     webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState")
                             .equals("complete"));
             log.info("Started Selenium Core");
+            loggerService.writeLog("Automatic web browser has been started");
             log.info("Waiting for authorization");
+            loggerService.writeLog("Please, authorize in Telegram. Waiting for it ;)");
             authorizationSelenium.waitForAuthorization();
 
             log.info("Authorization successful. Reading messages from {}", login);
+            loggerService.writeLog("Authorization successful. Reading messages from " + login);
         }
 
         MessageContext msgCtx = getCurrentMessageContext();
@@ -107,9 +119,19 @@ public class SeleniumCore {
             return MessageContext.EMPTY;
         }
 
-        log.info("Waiting neural network to response...");
-        String msg = messageService.getMessage(msgCtx);
+        log.info("Waiting neural network to response");
+        loggerService.writeLog("Waiting neural network to response... ");
+        String msg;
+
+        try {
+            msg = messageService.getMessage(msgCtx);
+        } catch (NeuralServiceIsNotAvailableException ex) {
+            loggerService.writeLog("Unfortunately, there was an error with neural network response :(");
+            return MessageContext.EMPTY;
+        }
+
         log.info("Got message from neural network: {}", msg);
+        loggerService.writeLog("Got neural network response");
 
         try {
             tgSelenium.writeMessage(msg);
@@ -119,6 +141,7 @@ public class SeleniumCore {
         }
 
         log.info("Sent generated message to {}", login);
+        loggerService.writeLog("Sent generated message to " + login);
 
         return msgCtx;
     }
@@ -152,10 +175,14 @@ public class SeleniumCore {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(msgCtx.getMessages().stream()
-                .filter(x -> x.getMessageAuthor().equals(Message.MessageAuthor.CONVERSATOR))
-                .sorted(Comparator.comparing(Message::getSentAt).reversed())
-                .toList()
-                .getFirst());
+        try {
+            return Optional.ofNullable(msgCtx.getMessages().stream()
+                    .filter(x -> x.getMessageAuthor().equals(Message.MessageAuthor.CONVERSATOR))
+                    .sorted(Comparator.comparing(Message::getSentAt).reversed())
+                    .toList()
+                    .getFirst());
+        } catch (NoSuchElementException ex) {
+            return Optional.empty();
+        }
     }
 }
