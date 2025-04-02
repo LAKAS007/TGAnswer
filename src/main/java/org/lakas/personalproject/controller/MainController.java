@@ -38,6 +38,13 @@ public class MainController {
 
     @PostMapping("/login")
     public String getLogin(@RequestParam("login") String login) {
+        if (globalContext.getCurrentChatContext() != null) {
+            String currentLogin = globalContext.getCurrentChatContext().getTelegramLogin();
+            if (!login.equals(currentLogin)) {
+                seleniumCore.start(login);
+            }
+        }
+
         if (isRunning) {
             return "redirect:/status";
         }

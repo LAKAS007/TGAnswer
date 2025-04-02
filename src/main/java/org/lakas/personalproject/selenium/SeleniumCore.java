@@ -47,8 +47,10 @@ public class SeleniumCore {
 
     @Async
     public void start(String login) {
+        loggerService.clearLogs();
         Optional<Message> lastMsg = Optional.empty();
         setupOnDialog(login);
+        sleep(1000);
         ChatContext chatCtx = setupChatContext(login);
         globalContext.setCurrentChatContext(chatCtx);
         log.info("Chat context: {}", chatCtx);
@@ -58,8 +60,6 @@ public class SeleniumCore {
             chatCtx = updateChatContext(chatCtx);
             sendAnswerTo(chatCtx);
             lastMsg = getLastMsgFromChatCtx(chatCtx);
-            log.info("New messages received");
-            loggerService.writeLog("New message(-s) were received");
         }
     }
 
@@ -132,7 +132,7 @@ public class SeleniumCore {
         try {
             tgService.writeMessage(msg);
         } catch (WebDriverException ex) {
-            log.error("Exception while writing message", ex);
+            log.error("Exception while writing message", ex); // TODO Fix problem with infinite loop
             return;
         }
 

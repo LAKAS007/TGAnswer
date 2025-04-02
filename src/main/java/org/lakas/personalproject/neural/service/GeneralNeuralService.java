@@ -123,14 +123,14 @@ public class GeneralNeuralService implements TelegramNeuralService {
         try {
             conversatorType = ConversatorType.valueOf(response);
             return conversatorType;
-        } catch (InvalidArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
         }
 
         int cnt = 0;
 
         while (!isValid && cnt < 3) {
             log.error("Invalid response from neural network about conversator status: {}, trying again (attempt №{})", response, (cnt + 1));
-            response = request(preForm + messagesList).toLowerCase();
+            response = request(preForm + messagesList).toUpperCase();
             isValid = List.of(Arrays.stream(ConversatorType.values()).map(Enum::name)).contains(response);
 
             if (isValid) {
