@@ -1,8 +1,10 @@
 package org.lakas.personalproject.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.lakas.personalproject.model.ChatContext;
+import org.lakas.personalproject.model.GlobalContext;
 import org.lakas.personalproject.selenium.SeleniumCore;
-import org.lakas.personalproject.service.SeleniumLoggerService;
+import org.lakas.personalproject.service.FileLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,13 +20,15 @@ import java.util.List;
 @RequestMapping
 public class MainController {
     private final SeleniumCore seleniumCore;
-    private final SeleniumLoggerService loggerService;
+    private final FileLoggerService loggerService;
     private static boolean isRunning = false;
+    private final GlobalContext globalContext;
 
     @Autowired
-    public MainController(SeleniumCore seleniumCore, SeleniumLoggerService loggerService) {
+    public MainController(SeleniumCore seleniumCore, FileLoggerService loggerService, GlobalContext globalContext) {
         this.seleniumCore = seleniumCore;
         this.loggerService = loggerService;
+        this.globalContext = globalContext;
     }
 
     @GetMapping
@@ -51,6 +55,15 @@ public class MainController {
         }
 
         model.addAttribute("logsList", logs);
+
+        if (globalContext.getCurrentChatContext() != null) {
+            ChatContext chatCtx = globalContext.getCurrentChatContext();
+            model.addAttribute("login", chatCtx.getTelegramLogin());
+            model.addAttribute("username", chatCtx.getConversatorName());
+            model.addAttribute("gender", chatCtx.getConversatorGender());
+            model.addAttribute("type", chatCtx.getConversatorType());
+        }
+
         return "success";
     }
 }

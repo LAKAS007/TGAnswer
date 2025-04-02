@@ -1,0 +1,6 @@
+[02.04.2025 17:27:29] Waiting neural network to response... 
+[02.04.2025 17:27:33] Got neural network response
+[02.04.2025 17:27:33] Sent generated message to @absja3k
+[02.04.2025 17:27:33] New message(-s) were received
+[02.04.2025 17:27:34] Waiting for new message(-s)
+[02.04.2025 17:27:35] Waiting for any messages

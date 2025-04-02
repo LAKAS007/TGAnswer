@@ -7,13 +7,18 @@ public enum NeuralModel {
     GEMINI_25_PRO_EXP("google/gemini-2.5-pro-exp-03-25:free"),
     GEMMA_3_27B("google/gemma-3-27b-it:free"),
     QWERKY_72B("featherless/qwerky-72b:free");
-    private final String name;
+    private final String modelName;
 
-    public String getName() {
-        return name;
+    public String getModelName() {
+        return modelName;
     }
 
-    NeuralModel(String name) {
-        this.name = name;
+    NeuralModel(String modelName) {
+        this.modelName = modelName;
+    }
+
+    @Override
+    public String toString() {
+        return name() + "{modelName=" + modelName + "}";
     }
 }

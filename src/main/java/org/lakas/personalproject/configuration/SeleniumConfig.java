@@ -1,18 +1,20 @@
 package org.lakas.personalproject.configuration;
 
-import org.lakas.personalproject.service.SeleniumLoggerService;
+import org.lakas.personalproject.model.GlobalContext;
+import org.lakas.personalproject.service.FileLoggerService;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SeleniumConfig {
-    private final SeleniumLoggerService seleniumLoggerService;
+    private final FileLoggerService fileLoggerService;
 
-    public SeleniumConfig(SeleniumLoggerService seleniumLoggerService) {
-        this.seleniumLoggerService = seleniumLoggerService;
+    public SeleniumConfig(FileLoggerService fileLoggerService) {
+        this.fileLoggerService = fileLoggerService;
     }
 
     @Bean
@@ -22,6 +24,6 @@ public class SeleniumConfig {
 
     @Bean
     public CommandLineRunner clearLogs() {
-        return args -> seleniumLoggerService.clearLogs();
+        return args -> fileLoggerService.clearLogs();
     }
 }

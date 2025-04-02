@@ -25,7 +25,16 @@ public class MessageExtractorSelenium {
 
     public List<Message> extractMessages(int n) {
         List<WebElement> messageElements = getMessageElements();
-        int messageElementsSize = messageElements.size();
+        return retrieveListOfMessages(messageElements, n);
+    }
+
+    public List<Message> extractConversatorMessages(int n) {
+        List<WebElement> messageElements = getConversatorMessageElements();
+        return retrieveListOfMessages(messageElements, n);
+    }
+
+    private List<Message> retrieveListOfMessages(List<WebElement> webElements, int n) {
+        int messageElementsSize = webElements.size();
 
         if (messageElementsSize == 0) {
             return new ArrayList<>();
@@ -33,13 +42,13 @@ public class MessageExtractorSelenium {
 
         List<Message> messages = new ArrayList<>();
 
-        if (messageElements.size() < n) {
+        if (webElements.size() < n) {
             log.warn("Number of read messages ({}) is less than then desired size of reading ({})", messageElementsSize, n);
             n = messageElementsSize;
         }
 
         for (int i = messageElementsSize - n; i < messageElementsSize; i++) {
-            WebElement element = messageElements.get(i);
+            WebElement element = webElements.get(i);
 
             Message msg = convertToMessage(element);
             if (msg != null) {
@@ -71,6 +80,11 @@ public class MessageExtractorSelenium {
 
     private List<WebElement> getMessageElements() {
         By findParameter = By.xpath("//div[contains(@class, 'message') and contains(@class, 'spoilers-container')]");
+        return driver.findElements(findParameter);
+    }
+
+    private List<WebElement> getConversatorMessageElements() {
+        By findParameter = By.xpath("//div[contains(@class, 'message') and contains(@class, 'spoilers-container') and ./*[contains(@class, 'translatable-message')]]");
         return driver.findElements(findParameter);
     }
 

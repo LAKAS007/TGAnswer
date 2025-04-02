@@ -5,11 +5,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.lakas.personalproject.configuration.NeuralNetworkConfig;
 import org.lakas.personalproject.configuration.WebConfig;
+import org.lakas.personalproject.model.Gender;
 import org.lakas.personalproject.model.Message;
-import org.lakas.personalproject.model.MessageContext;
+import org.lakas.personalproject.model.ChatContext;
 import org.lakas.personalproject.neural.service.NeuralModel;
-import org.lakas.personalproject.neural.service.NeuralService;
 import org.lakas.personalproject.neural.service.NeuralServiceFactory;
+import org.lakas.personalproject.neural.service.TelegramNeuralService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -29,10 +30,10 @@ public class GeneralNeuralNetworkServiceTest {
     @Test
     public void testShouldGenerateMessageInMathProblem() {
         NeuralModel[] values = NeuralModel.values();
-        List<NeuralService> services = new ArrayList<>();
+        List<TelegramNeuralService> services = new ArrayList<>();
 
         for (NeuralModel model : values) {
-            services.add(factory.getNeuralService(model));
+            services.add(factory.getTelegramNeuralService(model));
         }
 
         List<Message> messages = List.of(
@@ -48,9 +49,14 @@ public class GeneralNeuralNetworkServiceTest {
                         Message.MessageAuthor.CONVERSATOR, LocalDateTime.now())
                 );
 
-        MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
+        ChatContext msgCtx = ChatContext.builder()
+                .messages(messages)
+                .conversatorName("Test Boy")
+                .telegramLogin("login")
+                .conversatorGender(Gender.MALE)
+                .build();
 
-        for (NeuralService service : services) {
+        for (var service : services) {
             String msg = service.generateMessage(msgCtx);
             System.out.println(service.getClass().getSimpleName() + ": \n" + msg + "\n-----");
         }
@@ -60,10 +66,10 @@ public class GeneralNeuralNetworkServiceTest {
     @Test
     public void testShouldGenerateMessageInScumProblem() {
         NeuralModel[] values = NeuralModel.values();
-        List<NeuralService> services = new ArrayList<>();
+        List<TelegramNeuralService> services = new ArrayList<>();
 
         for (NeuralModel model : values) {
-            services.add(factory.getNeuralService(model));
+            services.add(factory.getTelegramNeuralService(model));
         }
 
         List<Message> messages = List.of(
@@ -71,11 +77,16 @@ public class GeneralNeuralNetworkServiceTest {
                         Message.MessageAuthor.CONVERSATOR, LocalDateTime.now())
         );
 
-        MessageContext msgCtx = new MessageContext(messages, MessageContext.Gender.MALE);
+        ChatContext msgCtx = ChatContext.builder()
+                .messages(messages)
+                .conversatorName("Test Boy")
+                .telegramLogin("login")
+                .conversatorGender(Gender.MALE)
+                .build();
 
-        for (NeuralService service : services) {
+        for (var service : services) {
             String msg = service.generateMessage(msgCtx);
-            System.out.println(service.getNeuralModel().getName() + ": \n" + msg + "\n-----");
+            System.out.println(service.getNeuralModel().getModelName() + ": \n" + msg + "\n-----");
         }
     }
 }

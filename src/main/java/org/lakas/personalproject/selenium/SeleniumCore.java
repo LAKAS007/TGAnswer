@@ -2,14 +2,11 @@ package org.lakas.personalproject.selenium;
 
 import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.exception.NeuralServiceIsNotAvailableException;
-import org.lakas.personalproject.model.Message;
-import org.lakas.personalproject.model.MessageContext;
+import org.lakas.personalproject.model.*;
+import org.lakas.personalproject.selenium.service.TelegramSeleniumService;
 import org.lakas.personalproject.service.MessageProducerService;
-import org.lakas.personalproject.service.SeleniumLoggerService;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
+import org.lakas.personalproject.service.FileLoggerService;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -26,36 +24,46 @@ import java.util.Optional;
 public class SeleniumCore {
     private final String TG_URL;
     private final AuthorizationSelenium authorizationSelenium;
-    private final TgSelenium tgSelenium;
+    private final TelegramSeleniumService tgService;
     private final WebDriver driver;
     private final MessageProducerService messageService;
-    private final SeleniumLoggerService loggerService;
+    private final FileLoggerService loggerService;
+    private final GlobalContext globalContext;
     private final int MILLIS_SLEEP_TIME = 1000;
 
     @Autowired
     public SeleniumCore(@Value("${tg.url}") String tgUrl, AuthorizationSelenium authorizationSelenium,
-                        TgSelenium tgSelenium, WebDriver driver,
-                        MessageProducerService messageService, SeleniumLoggerService loggerService) {
+                        TelegramSeleniumService tgService, WebDriver driver,
+                        MessageProducerService messageService, FileLoggerService loggerService,
+                        GlobalContext globalContext) {
         TG_URL = tgUrl;
         this.authorizationSelenium = authorizationSelenium;
-        this.tgSelenium = tgSelenium;
+        this.tgService = tgService;
         this.driver = driver;
         this.messageService = messageService;
         this.loggerService = loggerService;
+        this.globalContext = globalContext;
     }
 
     @Async
     public void start(String login) {
+        Optional<Message> lastMsg = Optional.empty();
+        setupOnDialog(login);
+        ChatContext chatCtx = setupChatContext(login);
+        globalContext.setCurrentChatContext(chatCtx);
+        log.info("Chat context: {}", chatCtx);
+
         while (true) {
-            MessageContext lastMsgCtx = replyTo(login);
-            Optional<Message> lastMsg = getLastMessageFromMsgCtx(lastMsgCtx);
-            waitUntilNewMessages(lastMsg);
+            waitForNewMessages(lastMsg);
+            chatCtx = updateChatContext(chatCtx);
+            sendAnswerTo(chatCtx);
+            lastMsg = getLastMsgFromChatCtx(chatCtx);
             log.info("New messages received");
             loggerService.writeLog("New message(-s) were received");
         }
     }
 
-    private void waitUntilNewMessages(Optional<Message> optionalOldLastMsg) {
+    private void waitForNewMessages(Optional<Message> optionalOldLastMsg) {
         if (optionalOldLastMsg.isEmpty()) {
             waitUntilAnyMessages();
             return;
@@ -73,7 +81,6 @@ public class SeleniumCore {
 
         log.info("Waiting for new messages");
         loggerService.writeLog("Waiting for new message(-s)");
-
 
         while (lastMsg.equals(oldLastMsg)) {
             sleep(MILLIS_SLEEP_TIME);
@@ -97,26 +104,15 @@ public class SeleniumCore {
         }
     }
 
-    private MessageContext replyTo(String login) {
-        if (driver.getCurrentUrl() == null || !driver.getCurrentUrl().contains(login)) {
-            driver.get(TG_URL + login);
-            new WebDriverWait(driver, Duration.ofSeconds(10)).until(
-                    webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState")
-                            .equals("complete"));
-            log.info("Started Selenium Core");
-            loggerService.writeLog("Automatic web browser has been started");
-            log.info("Waiting for authorization");
-            loggerService.writeLog("Please, authorize in Telegram. Waiting for it ;)");
-            authorizationSelenium.waitForAuthorization();
+    private void sendAnswerTo(ChatContext chatContext) {
+        String login = chatContext.getTelegramLogin();
 
-            log.info("Authorization successful. Reading messages from {}", login);
-            loggerService.writeLog("Authorization successful. Reading messages from " + login);
+        if (!isDriverOnDialog(login)) {
+            setupOnDialog(login);
         }
 
-        MessageContext msgCtx = getCurrentMessageContext();
-
-        if (msgCtx.isEmpty()) {
-            return MessageContext.EMPTY;
+        if (chatContext.isEmpty()) {
+            return;
         }
 
         log.info("Waiting neural network to response");
@@ -124,42 +120,99 @@ public class SeleniumCore {
         String msg;
 
         try {
-            msg = messageService.getMessage(msgCtx);
+            msg = messageService.getMessage(chatContext);
         } catch (NeuralServiceIsNotAvailableException ex) {
             loggerService.writeLog("Unfortunately, there was an error with neural network response :(");
-            return MessageContext.EMPTY;
+            return;
         }
 
         log.info("Got message from neural network: {}", msg);
         loggerService.writeLog("Got neural network response");
 
         try {
-            tgSelenium.writeMessage(msg);
+            tgService.writeMessage(msg);
         } catch (WebDriverException ex) {
             log.error("Exception while writing message", ex);
-            return MessageContext.EMPTY;
+            return;
         }
 
         log.info("Sent generated message to {}", login);
         loggerService.writeLog("Sent generated message to " + login);
-
-        return msgCtx;
     }
 
-    private MessageContext getCurrentMessageContext() {
-        List<Message> messages = tgSelenium.readMessages();
+    private boolean isDriverOnDialog(String login) {
+        return driver.getCurrentUrl() != null || driver.getCurrentUrl().contains(login);
+    }
+
+    private void setupOnDialog(String login) {
+        driver.get(TG_URL + login);
+        new WebDriverWait(driver, Duration.ofSeconds(10)).until(
+                webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState")
+                        .equals("complete"));
+        log.info("Started Selenium Core");
+        loggerService.writeLog("Automatic web browser has been started");
+        log.info("Waiting for authorization");
+        loggerService.writeLog("Please, authorize in Telegram. Waiting for it ;)");
+        authorizationSelenium.waitForAuthorization();
+
+        log.info("Authorization successful. Reading messages from {}", login);
+        loggerService.writeLog("Authorization successful. Reading messages from " + login);
+        hideWindow();
+    }
+
+    private void hideWindow() {
+        driver.manage().window().setPosition(new Point(-10000, 0));
+    }
+
+    private ChatContext setupChatContext(String telegramLogin) {
+        List<Message> messages = tgService.readAllMessages();
+
+        if (messages.isEmpty()) {
+            return ChatContext.EMPTY;
+        }
+
+        String conversatorName = tgService.retrieveConversatorName();
+        log.info("Defining conversator gender...");
+        loggerService.writeLog("Defining conversator gender, because it wasn't specified...");
+        Gender conversatorGender = tgService.defineConversatorGender(messages);
+        List<String> additionalInfo = new ArrayList<>();
+        log.info("Defining conversator status...");
+        loggerService.writeLog("Defining conversator status, because it wasn't specified...");
+        ConversatorType conversatorType = tgService.defineConversatorType(messages, conversatorName);
+        log.info("Chat context setup completed");
+        loggerService.writeLog("Initial setup has been completed successfully!");
+
+        return ChatContext.builder()
+                .telegramLogin(telegramLogin)
+                .messages(messages)
+                .conversatorGender(conversatorGender)
+                .conversatorName(conversatorName)
+                .additionalInformation(additionalInfo)
+                .conversatorType(conversatorType)
+                .build();
+    }
+
+    private ChatContext updateChatContext(ChatContext chatContext) {
+        List<Message> messages = tgService.readAllMessages();
         log.info("Read {} messages", messages.size());
 
         if (messages.isEmpty()) {
-            log.info("No messages found. No work required");
-            return MessageContext.EMPTY;
+            log.info("No messages found");
+            return chatContext;
         }
 
-        return new MessageContext(messages, MessageContext.Gender.MALE);
+        return ChatContext.builder()
+                .telegramLogin(chatContext.getTelegramLogin())
+                .messages(messages)
+                .conversatorGender(chatContext.getConversatorGender())
+                .conversatorName(chatContext.getConversatorName())
+                .additionalInformation(chatContext.getAdditionalInformation())
+                .conversatorType(chatContext.getConversatorType())
+                .build();
     }
 
     private Optional<Message> getLastMessage() {
-        return tgSelenium.readLastMessage();
+        return tgService.readLastMessage();
     }
 
     private void sleep(int millis) {
@@ -170,7 +223,7 @@ public class SeleniumCore {
         }
     }
 
-    private Optional<Message> getLastMessageFromMsgCtx(MessageContext msgCtx) {
+    private Optional<Message> getLastMsgFromChatCtx(ChatContext msgCtx) {
         if (msgCtx.isEmpty()) {
             return Optional.empty();
         }

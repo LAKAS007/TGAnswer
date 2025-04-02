@@ -8,17 +8,32 @@
 </head>
 <body class="d-flex justify-content-center align-items-center vh-100 bg-light">
 <div class="container-fluid mt-4">
-    <div class="card w-75 mx-auto d-flex flex-column" style="height: 100vh;"> <!-- Делаем карту гибкой по высоте -->
+    <div class="card w-75 mx-auto d-flex flex-column">
+        <div th:if="${login}">
+            <!-- Информация о пользователе -->
+            <div class="card-header bg-secondary text-white" style="flex-shrink: 0;">
+                <h5 class="mb-0">Информация о собеседнике</h5>
+            </div>
+            <div class="card-body bg-dark text-light p-3">
+                <p class="mb-1"><strong>Логин в телеграмме:</strong> <span th:text="${login}"></span></p>
+                <p class="mb-1"><strong>Подписан как:</strong> <span th:text="${username}"></span></p>
+                <p class="mb-1"><strong>Тип:</strong> <span th:text="${type}"></span></p>
+                <p class="mb-1"><strong>Пол:</strong> <span th:text="${gender}"></span></p>
+            </div>
+        </div>
+
+        <!-- Логи системы -->
         <div class="card-header bg-secondary text-white" style="flex-shrink: 0;">
             <h5 class="mb-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Логи системы</h5>
         </div>
         <div class="card-body bg-dark text-light p-3 overflow-auto" style="flex-grow: 1; max-height: 100%; overflow-y: auto;">
             <div th:each="log : ${logsList}" class="border-bottom pb-2 mb-2">
-                <p class="mb-0 font-monospace" th:text="${log}"></p>
+                <span class="mb-0 font-monospace" th:text="${log}"></span>
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
     window.addEventListener('beforeunload', function() {

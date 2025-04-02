@@ -1,11 +1,9 @@
 package org.lakas.personalproject.service;
 
-import okio.Options;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
@@ -13,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
-public class SeleniumLoggerService {
+public class FileLoggerService {
     private static final Path LOGS_FILE_PATH = Path.of("data/selenium-logs.txt");
     public List<String> getLogs() {
         try {
