@@ -1,9 +1,9 @@
 package org.lakas.personalproject.neural.service;
 
-import org.lakas.personalproject.model.MessageContext;
-
 public interface NeuralService {
-    String generateMessage(MessageContext messageContext);
+    String request(String requestText);
+
     boolean isAvailable();
+
     NeuralModel getNeuralModel();
 }

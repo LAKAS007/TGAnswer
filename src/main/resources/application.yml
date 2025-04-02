@@ -1,5 +1,5 @@
 neural:
-  model: google/gemini-2.5-pro-exp-03-25:free
+  model: deepseek/deepseek-chat-v3-0324:free
   api:
     key:
 
@@ -8,17 +8,19 @@ spring:
     import: application-private.yml
   thymeleaf:
     cache: false
-
+    mode: HTML
+    encoding: UTF-8
+    prefix: file:src/main/resources/templates/
 tg:
   url: https://web.telegram.org/k/#
 
-#logging:
-#  level:
-#    org:
-#      lakas:
-#        personalproject:
-#          neural:
-#            debug
+logging:
+  level:
+    org:
+      lakas:
+        personalproject:
+          selenium:
+            debug
 
 server:
   port: 8082

@@ -14,7 +14,7 @@ public class NeuralServiceFactory {
         this.authToken = authToken;
     }
 
-    public NeuralService getNeuralService(NeuralModel model) {
+    public TelegramNeuralService getTelegramNeuralService(NeuralModel model) {
         return switch (model) {
             case BYTE_DANCE_72B, DEEP_SEEK_V3, QWEN_72B, GEMINI_25_PRO_EXP, GEMMA_3_27B, QWERKY_72B -> new GeneralNeuralService(model, restClient, authToken);
         };

@@ -1,7 +1,7 @@
 package org.lakas.personalproject.service;
 
-import org.lakas.personalproject.model.MessageContext;
+import org.lakas.personalproject.model.ChatContext;
 
 public interface MessageProducerService {
-    String getMessage(MessageContext messageContext);
+    String getMessage(ChatContext chatContext);
 }
