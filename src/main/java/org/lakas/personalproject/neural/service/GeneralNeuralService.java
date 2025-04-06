@@ -200,7 +200,7 @@ public class GeneralNeuralService implements TelegramNeuralService {
             throw new RuntimeException(e);
         } catch (NullPointerException e) {
             log.error(e.getMessage(), e);
-            return null;
+            return "";
         }
     }
 

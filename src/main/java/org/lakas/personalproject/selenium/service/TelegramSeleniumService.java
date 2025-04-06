@@ -6,6 +6,7 @@ import org.lakas.personalproject.model.Gender;
 import org.lakas.personalproject.model.Message;
 import org.lakas.personalproject.neural.service.TelegramNeuralService;
 import org.lakas.personalproject.selenium.MessageExtractorSelenium;
+import org.lakas.personalproject.selenium.SeleniumFactory;
 import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,19 +15,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Component
 public class TelegramSeleniumService {
-
-    private final WebDriver driver;
-    private final MessageExtractorSelenium messageExtractor;
     private final TelegramNeuralService neuralService;
+    private final MessageExtractorSelenium messageExtractor;
 
-    @Autowired
-    public TelegramSeleniumService(WebDriver driver, MessageExtractorSelenium messageExtractor,
-                                   TelegramNeuralService neuralService) {
-        this.driver = driver;
-        this.messageExtractor = messageExtractor;
+    public TelegramSeleniumService(TelegramNeuralService neuralService, MessageExtractorSelenium messageExtractor) {
         this.neuralService = neuralService;
+        this.messageExtractor = messageExtractor;
     }
 
     public List<Message> readAllMessages() {
@@ -50,8 +45,7 @@ public class TelegramSeleniumService {
     }
 
     public String retrieveConversatorName() {
-        By findParam = By.xpath("//div[@class='top']");
-        return driver.findElement(findParam).getText();
+       return messageExtractor.retrieveConversatorName();
     }
 
     public Optional<Message> readLastMessage() {
@@ -65,7 +59,6 @@ public class TelegramSeleniumService {
     }
 
     private WebElement getEnterLine() {
-        By findParameter = By.xpath("//div[contains(@class, 'input-message-input') and @data-peer-id]");
-        return driver.findElement(findParameter);
+        return messageExtractor.getEnterLine();
     }
 }

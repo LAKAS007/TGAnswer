@@ -14,11 +14,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Component
 public class MessageExtractorSelenium {
     private final WebDriver driver;
 
-    @Autowired
     public MessageExtractorSelenium(WebDriver driver) {
         this.driver = driver;
     }
@@ -31,6 +29,11 @@ public class MessageExtractorSelenium {
     public List<Message> extractConversatorMessages(int n) {
         List<WebElement> messageElements = getConversatorMessageElements();
         return retrieveListOfMessages(messageElements, n);
+    }
+
+    public String retrieveConversatorName() {
+        By findParam = By.xpath("//div[@class='top']");
+        return driver.findElement(findParam).getText();
     }
 
     private List<Message> retrieveListOfMessages(List<WebElement> webElements, int n) {
@@ -57,6 +60,11 @@ public class MessageExtractorSelenium {
         }
 
         return messages;
+    }
+
+    public WebElement getEnterLine() {
+        By findParameter = By.xpath("//div[contains(@class, 'input-message-input') and @data-peer-id]");
+        return driver.findElement(findParameter);
     }
 
     public Optional<Message> extractLastMessage() {

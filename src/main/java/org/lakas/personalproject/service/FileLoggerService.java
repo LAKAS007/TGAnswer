@@ -12,29 +12,50 @@ import java.util.List;
 
 @Service
 public class FileLoggerService {
-    private static final Path LOGS_FILE_PATH = Path.of("data/selenium-logs.txt");
-    public List<String> getLogs() {
+    private static final Path LOGS_FILE_PATH = Path.of("data/");
+
+    public List<String> getLogs(String login) {
+        createFileIfNotExists(login);
         try {
-            return Files.readAllLines(LOGS_FILE_PATH);
+            return Files.readAllLines(Path.of(LOGS_FILE_PATH + "/" + login));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void writeLog(String log) {
+    public void writeLog(String login, String log) {
         LocalDateTime currentTime = LocalDateTime.now();
         String timeStr = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+        createFileIfNotExists(login);
 
         try {
-            Files.writeString(LOGS_FILE_PATH, String.format("[%s] %s\n", timeStr, log), StandardOpenOption.APPEND);
+            Files.writeString(Path.of(LOGS_FILE_PATH + "/" + login), String.format("[%s] %s\n", timeStr, log), StandardOpenOption.APPEND);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void clearLogs() {
+    public void clearLogs(String login) {
         try {
-            Files.writeString(LOGS_FILE_PATH, "", StandardOpenOption.TRUNCATE_EXISTING);
+            Files.writeString(Path.of(LOGS_FILE_PATH + "/" + login), "", StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+        }
+    }
+
+    public void clearAllLogs() {
+        File folder = new File(LOGS_FILE_PATH.toString());
+        File[] files = folder.listFiles();
+
+        for (File file : files) {
+            file.delete();
+        }
+    }
+
+    private void createFileIfNotExists(String fileName) {
+        File file = new File(LOGS_FILE_PATH + "/" + fileName);
+
+        try {
+            file.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
