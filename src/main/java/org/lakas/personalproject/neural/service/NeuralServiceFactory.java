@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
+
 @Component
 public class NeuralServiceFactory {
     private final RestClient restClient;
@@ -12,6 +14,10 @@ public class NeuralServiceFactory {
     public NeuralServiceFactory(RestClient restClient, @Value("${neural.api.key}") String authToken) {
         this.restClient = restClient;
         this.authToken = authToken;
+    }
+
+    public List<NeuralModel> getAvailableNeuralModels() {
+        return List.of(NeuralModel.values());
     }
 
     public TelegramNeuralService getTelegramNeuralService(NeuralModel model) {

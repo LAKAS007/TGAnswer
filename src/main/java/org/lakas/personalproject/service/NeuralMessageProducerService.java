@@ -16,7 +16,7 @@ public class NeuralMessageProducerService implements MessageProducerService {
     private final TelegramNeuralService defaultNeuralService;
 
     @Autowired
-    public NeuralMessageProducerService(TelegramNeuralService neuralService, GlobalContext globalContext,
+    public NeuralMessageProducerService(GlobalContext globalContext,
                                         TelegramNeuralService defaultNeuralService) {
         this.globalContext = globalContext;
         this.defaultNeuralService = defaultNeuralService;

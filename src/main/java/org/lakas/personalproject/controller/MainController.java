@@ -3,7 +3,8 @@ package org.lakas.personalproject.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.lakas.personalproject.model.ChatContext;
 import org.lakas.personalproject.model.GlobalContext;
-import org.lakas.personalproject.selenium.SeleniumCore;
+import org.lakas.personalproject.neural.service.NeuralModel;
+import org.lakas.personalproject.neural.service.NeuralServiceFactory;
 import org.lakas.personalproject.service.FileLoggerService;
 import org.lakas.personalproject.service.SeleniumService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +21,20 @@ public class MainController {
     private final FileLoggerService loggerService;
     private final GlobalContext globalContext;
     private final SeleniumService seleniumService;
+    private final NeuralServiceFactory neuralServiceFactory;
 
     @Autowired
-    public MainController(FileLoggerService loggerService, GlobalContext globalContext, SeleniumService seleniumService) {
+    public MainController(FileLoggerService loggerService, GlobalContext globalContext, SeleniumService seleniumService,
+                          NeuralServiceFactory neuralServiceFactory) {
         this.loggerService = loggerService;
         this.globalContext = globalContext;
         this.seleniumService = seleniumService;
+        this.neuralServiceFactory = neuralServiceFactory;
     }
 
     @GetMapping
     public String index() {
-        return "index";
+        return "in dex";
     }
 
     @PostMapping("/login")
@@ -62,6 +66,9 @@ public class MainController {
             logs.add("Whoops... it seems like you didn't authorize in Telegram");
         }
 
+        List<NeuralModel> availableNeuralModels = neuralServiceFactory.getAvailableNeuralModels();
+        model.addAttribute("neuralModels", availableNeuralModels);
+
         model.addAttribute("logsList", logs);
 
         model.addAttribute("isEnabled", chatCtx.isEnabled());
@@ -70,7 +77,7 @@ public class MainController {
         model.addAttribute("gender", chatCtx.getConversatorGender());
         model.addAttribute("type", chatCtx.getConversatorType());
 
-        return "success";
+        return "status";
     }
 }
 
