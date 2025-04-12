@@ -19,7 +19,7 @@ logging:
     org:
       lakas_vaka:
         auto_answer:
-            debug
+            info
 
 server:
   port: 8082

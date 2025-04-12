@@ -4,19 +4,29 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.lakas_vaka.auto_answer.model.ConversatorContext;
 import org.openqa.selenium.WebDriver;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Component
-public class SimpleSessionManager implements SessionManager {
+public class HashMapSessionManager implements SessionManager {
     private final Map<String, ChatSession> sessions = new HashMap<>();
 
     @Override
     public boolean isActive(String login) {
+        ChatSession session = sessions.get(login);
+
+        if (session != null) {
+            return session.isEnabled();
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean exists(String login) {
         return sessions.containsKey(login);
     }
 
@@ -37,9 +47,14 @@ public class SimpleSessionManager implements SessionManager {
     public void removeSession(String login) {
         if (sessions.containsKey(login)) {
             ChatSession session = sessions.get(login);
-            session.getWebDriver().close();
+            session.getWebDriver().quit();
             sessions.remove(login);
         }
+    }
+
+    @Override
+    public List<ChatSession> getAll() {
+        return new ArrayList<>(sessions.values());
     }
 
     @Override
@@ -51,7 +66,7 @@ public class SimpleSessionManager implements SessionManager {
     private void destroy() {
         log.info("Closing all active sessions and associated web drivers");
         for (ChatSession session : sessions.values()) {
-            session.getWebDriver().close();
+            session.getWebDriver().quit();
         }
     }
 }

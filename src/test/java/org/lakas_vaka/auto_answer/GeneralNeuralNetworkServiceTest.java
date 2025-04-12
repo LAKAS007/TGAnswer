@@ -33,7 +33,7 @@ public class GeneralNeuralNetworkServiceTest {
         List<SocialNetworkNeuralService> services = new ArrayList<>();
 
         for (NeuralModel model : values) {
-            services.add(factory.getTelegramNeuralService(model));
+            services.add(factory.getSocialMediaNeuralService(model));
         }
 
         List<Message> messages = List.of(
@@ -69,7 +69,7 @@ public class GeneralNeuralNetworkServiceTest {
         List<SocialNetworkNeuralService> services = new ArrayList<>();
 
         for (NeuralModel model : values) {
-            services.add(factory.getTelegramNeuralService(model));
+            services.add(factory.getSocialMediaNeuralService(model));
         }
 
         List<Message> messages = List.of(

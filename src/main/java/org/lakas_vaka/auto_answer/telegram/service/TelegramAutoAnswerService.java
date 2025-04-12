@@ -9,7 +9,7 @@ import org.lakas_vaka.auto_answer.service.auto_answer.AbstractAutoAnswerService;
 import org.lakas_vaka.auto_answer.service.message.MessageProducerService;
 import org.lakas_vaka.auto_answer.service.message.NeuralMessageProducerService;
 import org.lakas_vaka.auto_answer.session.SessionManager;
-import org.lakas_vaka.auto_answer.session.SimpleSessionManager;
+import org.lakas_vaka.auto_answer.session.HashMapSessionManager;
 import org.lakas_vaka.auto_answer.telegram.TelegramChatAgent;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +20,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class TelegramAutoAnswerService extends AbstractAutoAnswerService {
     private final NeuralMessageProducerService neuralMessageProducerService;
-    private final SimpleSessionManager sessionManager;
+    private final SessionManager sessionManager;
     private final SocialNetworkNeuralService neuralService;
 
     @Autowired
     public TelegramAutoAnswerService(NeuralMessageProducerService neuralMessageProducerService,
-                                     SimpleSessionManager sessionManager, SocialNetworkNeuralService neuralService) {
+                                     SessionManager sessionManager, SocialNetworkNeuralService neuralService) {
         this.neuralMessageProducerService = neuralMessageProducerService;
         this.sessionManager = sessionManager;
         this.neuralService = neuralService;
     }
 
-    @Async
+    @Async("asynchronousListenerExecutor")
     @Override
     public void start(String login, ConversatorContext conversatorContext) {
         log.debug("Started telegram auto answer service");

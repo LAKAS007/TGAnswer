@@ -9,13 +9,14 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 public abstract class AbstractSeleniumChat implements SeleniumChat {
     private static MessageSeleniumMapper mapper;
     private final FileLogger fileLogger;
-    private final int MILLIS_SLEEP_TIME = 1000;
+    private final int MILLIS_SLEEP_TIME = 100;
 
     public AbstractSeleniumChat(FileLogger fileLogger) {
         this.fileLogger = fileLogger;
@@ -55,11 +56,13 @@ public abstract class AbstractSeleniumChat implements SeleniumChat {
 
             while (true) {
                 Message lastMsg = extractLastMessage();
-                if (lastMsg.getSentAt().isAfter(startTime)) {
+                if (lastMsg != null && lastMsg.getSentAt().isAfter(startTime)) {
                     break;
                 }
             }
 
+            log.info("Received new messages");
+            fileLogger.writeLog(getLogin(), "Received new message(-s)");
             return;
         }
 
@@ -79,7 +82,7 @@ public abstract class AbstractSeleniumChat implements SeleniumChat {
     public Message extractLastMessage() {
         try {
             return extractMessages().getLast();
-        } catch (NoSuchElementException e) {
+        } catch (java.util.NoSuchElementException e) {
             return null;
         }
     }
@@ -87,6 +90,11 @@ public abstract class AbstractSeleniumChat implements SeleniumChat {
     @Override
     public List<Message> extractMessages() {
         List<WebElement> elements = getDriver().findElements(getMessageFilter());
+
+        if (elements.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         return mapToMessages(elements);
     }
 
@@ -100,6 +108,8 @@ public abstract class AbstractSeleniumChat implements SeleniumChat {
         if (mapper == null) {
             mapper = new MessageSeleniumMapper(getDriver());
         }
+
+        mapper.setDriver(getDriver());
 
         return webElements.stream().map(mapper::mapToMessage).toList();
     }

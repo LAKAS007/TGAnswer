@@ -29,7 +29,7 @@
                         <div class="mb-3">
                             <label for="gender" class="form-label">Выберите пол собеседника</label>
                             <select id="gender" name="gender" class="form-select">
-                                <option value="" disabled selected>Выберите пол</option>
+                                <option value="" disabled selected>-- Выберите пол --</option>
                                 <option value="MALE">MALE</option>
                                 <option value="FEMALE">FEMALE</option>
                             </select>
@@ -38,13 +38,24 @@
                         <div class="mb-4">
                             <label for="type" class="form-label">Выберите стиль общения</label>
                             <select id="type" name="type" class="form-select">
-                                <option value="" disabled selected>Выберите стиль</option>
+                                <option value="" disabled selected>-- Выберите стиль --</option>
                                 <option value="FAMILY">FAMILY</option>
                                 <option value="OFFICIAL">OFFICIAL</option>
                                 <option value="FRIEND">FRIEND</option>
                                 <option value="ENEMY">ENEMY</option>
                                 <option value="STRANGER">STRANGER</option>
                                 <option value="COLLEGE">COLLEGE</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="neuralModel" class="form-label">Модель нейросети</label>
+                            <select class="form-select" id="neuralModel" name="neuralModel" required>
+                                <option disabled selected value="">-- Выберите модель --</option>
+                                <option th:each="model : ${neuralModels}"
+                                        th:value="${model.name()}"
+                                        th:text="${model.name()}">
+                                </option>
                             </select>
                         </div>
 

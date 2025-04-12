@@ -3,6 +3,8 @@ package org.lakas_vaka.auto_answer.service.message;
 import lombok.extern.slf4j.Slf4j;
 import org.lakas_vaka.auto_answer.exception.NeuralServiceIsNotAvailableException;
 import org.lakas_vaka.auto_answer.log.FileLogger;
+import org.lakas_vaka.auto_answer.neural.service.NeuralModel;
+import org.lakas_vaka.auto_answer.neural.service.NeuralServiceFactory;
 import org.lakas_vaka.auto_answer.session.ChatSession;
 import org.lakas_vaka.auto_answer.neural.service.SocialNetworkNeuralService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,29 +13,34 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class NeuralMessageProducerService implements MessageProducerService {
-    private final SocialNetworkNeuralService defaultNeuralService;
+    private final NeuralModel defaulNeuralModel;
     private final FileLogger fileLogger;
+    private final NeuralServiceFactory neuralServiceFactory;
 
     @Autowired
-    public NeuralMessageProducerService(SocialNetworkNeuralService defaultNeuralService, FileLogger fileLogger) {
-        this.defaultNeuralService = defaultNeuralService;
+    public NeuralMessageProducerService(NeuralModel defaulNeuralModel, FileLogger fileLogger,
+                                        NeuralServiceFactory neuralServiceFactory) {
+        this.defaulNeuralModel = defaulNeuralModel;
         this.fileLogger = fileLogger;
+        this.neuralServiceFactory = neuralServiceFactory;
     }
 
     @Override
     public String getMessage(ChatSession chatSession) {
-//        if (neuralService == null) {
-//            log.warn("No neural model was specified by user. Using default neural model");
-//            neuralService = defaultNeuralService;
-//        }
+        NeuralModel desiredNeuralModel = chatSession.getConversatorContext().getNeuralModel();
 
-        var neuralService = defaultNeuralService;
+        if (desiredNeuralModel == null) {
+            log.warn("No neural model was specified by user. Using default neural model");
+            desiredNeuralModel = defaulNeuralModel;
+        }
+
+        var neuralService = neuralServiceFactory.getSocialMediaNeuralService(desiredNeuralModel);
 
         if (!neuralService.isAvailable()) {
             throw new NeuralServiceIsNotAvailableException();
         }
 
-        log.info("Neural Service model {} is available", neuralService.getNeuralModel());
+        log.info("Neural model {} is available", desiredNeuralModel);
         log.info("Waiting neural network to response");
         fileLogger.writeLog(chatSession.getLogin(), "Waiting neural network to response...");
 

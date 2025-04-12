@@ -27,7 +27,7 @@ public class NeuralNetworkConfig {
 
     @Bean
     public SocialNetworkNeuralService defaultNeuralService() {
-        return neuralServiceFactory.getTelegramNeuralService(defaultNeuralModel());
+        return neuralServiceFactory.getSocialMediaNeuralService(defaultNeuralModel());
     }
 
     @Bean

@@ -11,7 +11,7 @@ import java.time.format.DateTimeParseException;
 
 @Slf4j
 public class MessageSeleniumMapper {
-    private final WebDriver driver;
+    private WebDriver driver;
 
     public MessageSeleniumMapper(WebDriver driver) {
         this.driver = driver;
@@ -68,5 +68,9 @@ public class MessageSeleniumMapper {
         } catch (NoSuchElementException ex) {
             return true;
         }
+    }
+
+    public void setDriver(WebDriver driver) {
+        this.driver = driver;
     }
 }

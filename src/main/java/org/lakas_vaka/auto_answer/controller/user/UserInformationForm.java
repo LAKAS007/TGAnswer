@@ -1,4 +1,4 @@
-package org.lakas_vaka.auto_answer.controller;
+package org.lakas_vaka.auto_answer.controller.user;
 
 import lombok.Data;
 
@@ -8,4 +8,5 @@ public class UserInformationForm {
     private String name;
     private String gender;
     private String type;
+    private String neuralModel;
 }

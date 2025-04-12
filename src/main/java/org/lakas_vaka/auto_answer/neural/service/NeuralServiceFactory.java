@@ -8,21 +8,22 @@ import java.util.List;
 
 @Component
 public class NeuralServiceFactory {
-    private final RestClient restClient;
-    private final String authToken;
+    private static GeneralNeuralService generalNeuralService;
 
     public NeuralServiceFactory(RestClient restClient, @Value("${neural.api.key}") String authToken) {
-        this.restClient = restClient;
-        this.authToken = authToken;
+        generalNeuralService = new GeneralNeuralService(null, restClient, authToken);
     }
 
     public List<NeuralModel> getAvailableNeuralModels() {
         return List.of(NeuralModel.values());
     }
 
-    public SocialNetworkNeuralService getTelegramNeuralService(NeuralModel model) {
+    public SocialNetworkNeuralService getSocialMediaNeuralService(NeuralModel model) {
         return switch (model) {
-            case BYTE_DANCE_72B, DEEP_SEEK_V3, QWEN_72B, GEMINI_25_PRO_EXP, GEMMA_3_27B, QWERKY_72B -> new GeneralNeuralService(model, restClient, authToken);
+            case BYTE_DANCE_72B, DEEP_SEEK_V3, QWEN_72B, GEMINI_25_PRO_EXP, GEMMA_3_27B, QWERKY_72B -> {
+                generalNeuralService.setNeuralModel(model);
+                yield generalNeuralService;
+            }
         };
     }
 }

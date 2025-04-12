@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class GeneralNeuralService implements SocialNetworkNeuralService {
     private final String URL = "https://openrouter.ai/api/v1/chat/completions";
 
-    private final NeuralModel neuralModel;
+    private NeuralModel neuralModel;
 
     private final RestClient restClient;
 
@@ -164,6 +164,10 @@ public class GeneralNeuralService implements SocialNetworkNeuralService {
     }
 
     private String sendRequest(String requestMessage) {
+        if (neuralModel == null) {
+            throw new IllegalStateException("Can't send request because neural model is null");
+        }
+
         log.debug("Request message: {}", requestMessage);
         Map<String, Object> requestBody = Map.of(
                 "model", neuralModel.getModelName(),
@@ -216,5 +220,9 @@ public class GeneralNeuralService implements SocialNetworkNeuralService {
     @Override
     public NeuralModel getNeuralModel() {
         return neuralModel;
+    }
+
+    public void setNeuralModel(NeuralModel neuralModel) {
+        this.neuralModel = neuralModel;
     }
 }

@@ -1,7 +1,6 @@
-package org.lakas_vaka.auto_answer.controller;
+package org.lakas_vaka.auto_answer.controller.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.lakas_vaka.auto_answer.log.FileLogger;
 import org.lakas_vaka.auto_answer.model.ConversatorContext;
 import org.lakas_vaka.auto_answer.model.chat.ConversatorType;
@@ -27,18 +26,23 @@ public class MainController {
     private final AutoAnswerService autoAnswerService;
     private final NeuralServiceFactory neuralServiceFactory;
     private final SessionManager sessionManager;
+    private final FileLogger fileLogger;
 
     @Autowired
     public MainController(FileLogger loggerService, AutoAnswerService autoAnswerService,
-                          NeuralServiceFactory neuralServiceFactory, SessionManager sessionManager) {
+                          NeuralServiceFactory neuralServiceFactory, SessionManager sessionManager,
+                          FileLogger fileLogger) {
         this.loggerService = loggerService;
         this.autoAnswerService = autoAnswerService;
         this.neuralServiceFactory = neuralServiceFactory;
         this.sessionManager = sessionManager;
+        this.fileLogger = fileLogger;
     }
 
     @GetMapping
-    public String index() {
+    public String index(Model model) {
+        List<NeuralModel> availableNeuralModels = neuralServiceFactory.getAvailableNeuralModels();
+        model.addAttribute("neuralModels", availableNeuralModels);
         return "index";
     }
 
@@ -61,8 +65,21 @@ public class MainController {
             ctx.setConversatorType(ConversatorType.valueOf(form.getType()));
         }
 
-        log.info("User supplied context: {}", ctx);
+        if (form.getNeuralModel() == null) {
+            ctx.setNeuralModel(null);
+        } else {
+            ctx.setNeuralModel(NeuralModel.valueOf(form.getNeuralModel()));
+        }
+
+        log.info("User supplied context: login {}, {}", form.getLogin(), ctx);
         autoAnswerService.start(form.getLogin(), ctx);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return "redirect:/status?login=" + form.getLogin();
     }
 
@@ -73,6 +90,25 @@ public class MainController {
         }
 
         autoAnswerService.stop(login);
+        fileLogger.writeLog(login, "Autoanswering was stopped");
+        sessionManager.getSession(login).setEnabled(false);
+        return "redirect:/status?login=" + login;
+    }
+
+    @PostMapping("/select")
+    public String postModel(@RequestParam("neuralModel") String neuralModelString, @RequestParam("login") String login) {
+        ChatSession session = sessionManager.getSession(login);
+
+        if (session == null) {
+            return "redirect:/";
+        }
+
+        NeuralModel neuralModel = NeuralModel.valueOf(neuralModelString);
+        session.getConversatorContext().setNeuralModel(neuralModel);
+
+        log.info("Switched to {} neural model", session.getConversatorContext().getNeuralModel());
+        fileLogger.writeLog(login, "Neural model switched to [" + session.getConversatorContext().getNeuralModel().getModelName() + "]");
+
         return "redirect:/status?login=" + login;
     }
 
@@ -92,7 +128,7 @@ public class MainController {
         List<NeuralModel> availableNeuralModels = neuralServiceFactory.getAvailableNeuralModels();
         model.addAttribute("neuralModels", availableNeuralModels);
 
-        model.addAttribute("logsList", logs);
+        model.addAttribute("logsList", logs.reversed());
 
         model.addAttribute("isEnabled", session.isEnabled());
         model.addAttribute("login", session.getLogin());
@@ -102,6 +138,7 @@ public class MainController {
         model.addAttribute("username", ctx.getConversatorName());
         model.addAttribute("gender", ctx.getConversatorGender());
         model.addAttribute("type", ctx.getConversatorType());
+        model.addAttribute("neuralModel", ctx.getNeuralModel());
 
         return "status";
     }
